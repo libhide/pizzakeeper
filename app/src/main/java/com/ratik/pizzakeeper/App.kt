@@ -1,9 +1,12 @@
 package com.ratik.pizzakeeper
 
 import android.app.Application
+import android.arch.persistence.room.Room
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import com.ratik.pizzakeeper.data.PizzaDatabase
 import com.ratik.pizzakeeper.data.Topping
+import kotlin.concurrent.thread
 
 val toppingBitmaps = mutableMapOf<Topping, Bitmap>()
 val toppings = mutableListOf (
@@ -16,12 +19,18 @@ val toppings = mutableListOf (
     Topping(7, "Pineapple", "topping_pineapple"),
     Topping(8, "Spinach", "topping_spinach")
 )
+lateinit var db: PizzaDatabase
 
 class App : Application() {
 
     override fun onCreate() {
-        toppings.forEach {
-            toppingBitmaps[it] = getBitmap(it.drawableName)
+        db = Room.databaseBuilder(applicationContext, PizzaDatabase::class.java,
+                "PizzaDatabase").build()
+        thread {
+            toppings.forEach {
+                toppingBitmaps[it] = getBitmap(it.drawableName)
+                db.toppingDao().insert(it)
+            }
         }
         super.onCreate()
     }

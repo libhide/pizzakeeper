@@ -11,11 +11,15 @@ import android.view.MenuItem
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.Toast
 import com.ratik.pizzakeeper.R
+import com.ratik.pizzakeeper.data.Pizza
+import com.ratik.pizzakeeper.data.PizzaTopping
+import com.ratik.pizzakeeper.db
 import com.ratik.pizzakeeper.toppings
 import com.ratik.pizzakeeper.ui.main.PIZZA_ID
 import com.ratik.pizzakeeper.views.PizzaView
+import java.util.*
+import kotlin.concurrent.thread
 
 class CreatorActivity : AppCompatActivity() {
     private var pizzaId = -1
@@ -51,7 +55,12 @@ class CreatorActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.delete -> {
-                Toast.makeText(this, "deleted", Toast.LENGTH_SHORT).show()
+                thread {
+                    if (pizzaId != -1) {
+                        db.pizzaToppingDao().deletePizzaById(pizzaId)
+                        db.pizzaDao().deletePizzaById(pizzaId)
+                    }
+                }
                 finish()
             }
             R.id.edit_name -> {
@@ -66,7 +75,20 @@ class CreatorActivity : AppCompatActivity() {
                 }).show()
             }
             R.id.save -> {
-                Toast.makeText(this, "saved", Toast.LENGTH_SHORT).show()
+                thread {
+                    if (pizzaId != -1) {
+                        db.pizzaToppingDao().deletePizzaById(pizzaId)
+                        db.pizzaDao().deletePizzaById(pizzaId)
+                    }
+                    val pizza = Pizza(null, viewModel.pizzaName, Date())
+                    val insertedPizzaId = db.pizzaDao().insert(pizza).toInt()
+                    viewModel.switchStates.forEach {
+                        if (it.value) {
+                            val pizzaTopping = PizzaTopping(insertedPizzaId, it.key.id)
+                            db.pizzaToppingDao().insert(pizzaTopping)
+                        }
+                    }
+                }
                 finish()
             }
         }
