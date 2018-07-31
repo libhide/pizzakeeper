@@ -1,5 +1,6 @@
 package com.ratik.pizzakeeper.ui.creator
 
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -19,18 +20,21 @@ import com.ratik.pizzakeeper.views.PizzaView
 class CreatorActivity : AppCompatActivity() {
     private var pizzaId = -1
     lateinit var pizzaView: PizzaView
+    lateinit var viewModel: CreatorViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_creator)
 
         pizzaId = intent.getIntExtra(PIZZA_ID, -1)
-        pizzaView = PizzaView(this, mutableMapOf())
+        viewModel = ViewModelProviders.of(this).get(CreatorViewModel::class.java)
+        title = viewModel.pizzaName
+        pizzaView = PizzaView(this, viewModel.switchStates)
 
         val frameLayout = findViewById<FrameLayout>(R.id.frameLayout)
         frameLayout.addView(pizzaView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
-        val adapter = CreatorAdapter(pizzaView)
+        val adapter = CreatorAdapter(pizzaView, viewModel)
         val recyclerView = findViewById<RecyclerView>(R.id.toppingsRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         recyclerView.adapter = adapter
@@ -57,6 +61,7 @@ class CreatorActivity : AppCompatActivity() {
                     if (editText.text.isNotEmpty()) {
                         val text = editText.text.toString()
                         title = text
+                        viewModel.pizzaName = text
                     }
                 }).show()
             }
