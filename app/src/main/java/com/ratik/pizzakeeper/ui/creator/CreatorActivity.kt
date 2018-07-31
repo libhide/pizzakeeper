@@ -32,7 +32,18 @@ class CreatorActivity : AppCompatActivity() {
 
         pizzaId = intent.getIntExtra(PIZZA_ID, -1)
         viewModel = ViewModelProviders.of(this).get(CreatorViewModel::class.java)
-        title = viewModel.pizzaName
+
+        thread {
+            if (pizzaId != -1) {
+                viewModel.pizzaName = db.pizzaDao().getPizzaById(pizzaId).name
+                val toppingIds = db.pizzaToppingDao().getToppingIdsForPizzaId(pizzaId)
+                toppingIds.forEach {
+                    val topping = db.toppingDao().getToppingById(it)
+                    viewModel.switchStates[topping] = true
+                }
+            }
+            title = viewModel.pizzaName
+        }
         pizzaView = PizzaView(this, viewModel.switchStates)
 
         val frameLayout = findViewById<FrameLayout>(R.id.frameLayout)
@@ -54,6 +65,9 @@ class CreatorActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+            }
             R.id.delete -> {
                 thread {
                     if (pizzaId != -1) {
