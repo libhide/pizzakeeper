@@ -24,8 +24,9 @@ lateinit var db: PizzaDatabase
 class App : Application() {
 
     override fun onCreate() {
-        db = Room.databaseBuilder(applicationContext, PizzaDatabase::class.java,
-                "PizzaDatabase").build()
+        db = Room.databaseBuilder(applicationContext, PizzaDatabase::class.java, "PizzaDatabase")
+                .fallbackToDestructiveMigration()
+                .build()
         thread {
             toppings.forEach {
                 toppingBitmaps[it] = getBitmap(it.drawableName)
